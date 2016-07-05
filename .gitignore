@@ -1,2 +1,2 @@
-obj
-zfp-nrf51/obj
+obj/*
+!obj/libgcc.a
