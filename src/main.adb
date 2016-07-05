@@ -12,9 +12,8 @@ begin
    Delay_Init;
    Radio.Init;
    loop
-      Delay_MS (100);
+      Delay_MS (300);
       Radio.Start;
       GPIO.OUTCLR.Arr (12) := Clear;
-      WFI;
    end loop;
 end Main;

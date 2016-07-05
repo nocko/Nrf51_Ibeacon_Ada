@@ -3,12 +3,16 @@ with System.Machine_Code;
 with nrf51;
 with nrf51.CLOCK;
 with nrf51.Interrupts;
+with nrf51.RTC;
 
 package body Util is
    use Interfaces;
    use nrf51;
    RTC_Clock_Freq : constant Integer := 10#32768#;
    Delay_Timer_Prescaler : constant := 0;
+
+   RTC1 : nrf51.RTC.RTC_Peripheral renames nrf51.RTC.RTC1_Periph;
+   CLOCK : nrf51.CLOCK.CLOCK_Peripheral renames nrf51.CLOCK.CLOCK_Periph;
 
    --  Private Functions
    procedure RTC1_IRQHandler;
@@ -27,37 +31,24 @@ package body Util is
    begin
       declare
          use nrf51.CLOCK;
-         EVENTS_LFCLKSTARTED : nrf51.Word renames
-           nrf51.CLOCK.CLOCK_Periph.EVENTS_LFCLKSTARTED;
-         TASKS_LFCLKSTART : nrf51.Word renames
-           nrf51.CLOCK.CLOCK_Periph.TASKS_LFCLKSTART;
-         LFCLKSRC : nrf51.CLOCK.LFCLKSRC_Register renames
-           nrf51.CLOCK.CLOCK_Periph.LFCLKSRC;
       begin
-         if EVENTS_LFCLKSTARTED /= 1 then
-            LFCLKSRC.SRC := Xtal;
-            TASKS_LFCLKSTART := 1;
+         if CLOCK.EVENTS_LFCLKSTARTED /= 1 then
+            CLOCK.LFCLKSRC.SRC := Xtal;
+            CLOCK.TASKS_LFCLKSTART := 1;
             loop
                --  Waiting for the LF Oscillator to start
-               exit when EVENTS_LFCLKSTARTED = 1;
+               exit when CLOCK.EVENTS_LFCLKSTARTED = 1;
             end loop;
          end if;
       end;
       declare
-         PRESCALER : PRESCALER_PRESCALER_Field renames
-           nrf51.RTC.RTC1_Periph.PRESCALER.PRESCALER;
-         TASKS_STOP : nrf51.Word renames
-           nrf51.RTC.RTC1_Periph.TASKS_STOP;
-         TASKS_CLEAR : nrf51.Word renames
-           nrf51.RTC.RTC1_Periph.TASKS_CLEAR;
-         INTENSET : nrf51.RTC.INTENSET_Register renames
-           nrf51.RTC.RTC1_Periph.INTENSET;
          use nrf51.Interrupts;
+         use nrf51.RTC;
       begin
-         PRESCALER := Delay_Timer_Prescaler;
-         TASKS_STOP := 1;
-         TASKS_CLEAR := 1;
-         INTENSET.COMPARE.Arr (0) := Set;
+         RTC1.PRESCALER.PRESCALER := Delay_Timer_Prescaler;
+         RTC1.TASKS_STOP := 1;
+         RTC1.TASKS_CLEAR := 1;
+         RTC1.INTENSET.COMPARE.Arr (0) := Set;
          --  Interrupts.Set_Priority(RTC1_IRQ, IRQ_Prio_Low);
          Interrupts.Enable (RTC1_IRQ);
       end;
@@ -71,12 +62,11 @@ package body Util is
    end WFI;
 
    procedure Delay_MS (Milliseconds : Natural) is
-      TASKS_START : nrf51.Word renames nrf51.RTC.RTC1_Periph.TASKS_START;
-      CC0 : UInt24 renames nrf51.RTC.RTC1_Periph.CC (0).COMPARE;
+      use nrf51.RTC;
    begin
-      CC0 := MS_To_Ticks (Milliseconds);
+      RTC1.CC (0).COMPARE := MS_To_Ticks (Milliseconds);
       Delay_Active := True;
-      TASKS_START := 1;
+      RTC1.TASKS_START := 1;
       loop
          WFI;
          exit when Delay_Active = False;
@@ -84,14 +74,10 @@ package body Util is
    end Delay_MS;
 
    procedure RTC1_IRQHandler is
-      TASKS_STOP : nrf51.Word renames nrf51.RTC.RTC1_Periph.TASKS_STOP;
-      TASKS_CLEAR : nrf51.Word renames nrf51.RTC.RTC1_Periph.TASKS_CLEAR;
-      EVENTS_COMPARE : EVENTS_COMPARE_Registers renames
-        nrf51.RTC.RTC1_Periph.EVENTS_COMPARE;
    begin
       Delay_Active := False;
-      TASKS_STOP := 1;
-      TASKS_CLEAR := 1;
-      EVENTS_COMPARE (0) := 0;
+      RTC1.TASKS_STOP := 1;
+      RTC1.TASKS_CLEAR := 1;
+      RTC1.EVENTS_COMPARE (0) := 0;
    end RTC1_IRQHandler;
 end Util;
