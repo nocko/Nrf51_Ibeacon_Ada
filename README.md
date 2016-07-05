@@ -6,18 +6,18 @@ during which the core is running.
 
 ## Building
 
-1. Download
-   [GNAT GPL ARM-ELF toolchain from AdaCore](http://libre.adacore.com/download/configurations)
-   
-2. ~~~ bash
-git clone https://github.com/nocko/Nrf51_Ibeacon_Ada.git
-cd Nrf51_Ibeacon_Ada
-git submodule init
-git submodule update
-gprbuild
-~~~
+1. Download [GNAT GPL ARM-ELF toolchain from AdaCore](http://libre.adacore.com/download/configurations)
+2. Prepare the build:
+   ~~~ bash
+   git clone https://github.com/nocko/Nrf51_Ibeacon_Ada.git
+   cd Nrf51_Ibeacon_Ada
+   git submodule init
+   git submodule update
+   ~~~
 
-3. Load onto your board in your usual way (OpenOCD, JLink, &c)
+3. Press Return: `gprbuild`
+
+4. Load onto your board in your usual way (OpenOCD, JLink, &c)
 
 ## Inspiration
 
