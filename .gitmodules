@@ -1,0 +1,3 @@
+[submodule "zfp-nrf51"]
+	path = zfp-nrf51
+	url = git@github.com:nocko/zfp-nrf51.git
